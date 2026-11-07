@@ -23,27 +23,64 @@ function limb(a,b,c,d,w,color){g.strokeStyle=color;g.lineWidth=w;g.lineCap="roun
 function backdrop(s){let sky=g.createLinearGradient(0,0,0,640);if(s.bg==="night"){sky.addColorStop(0,"#1b284b");sky.addColorStop(1,"#5a658c")}else if(s.bg==="room"){sky.addColorStop(0,"#f1e5d8");sky.addColorStop(1,"#e7cbb3")}else{sky.addColorStop(0,"#94d5e8");sky.addColorStop(1,"#f6e5c8")}g.fillStyle=sky;g.fillRect(0,0,480,640);
 if(s.bg==="room"){g.fillStyle="#cda989";g.fillRect(0,444,480,196);g.fillStyle="#faf2dc";g.fillRect(40,155,150,175);g.fillStyle="#9ac6d7";g.fillRect(51,166,128,153);g.fillStyle="#fff";g.fillRect(108,166,10,153);g.fillRect(51,236,128,10);g.fillStyle="#a47d67";g.fillRect(0,440,480,9)}else{g.fillStyle=s.bg==="night"?"#384f62":"#8ab99b";g.beginPath();g.ellipse(240,505,360,110,0,0,7);g.fill();g.fillStyle=s.bg==="night"?"#455e62":"#b2d39c";g.fillRect(0,500,480,140);for(let x of [55,420]){g.fillStyle="#795f52";g.fillRect(x-8,355,16,145);for(let j=0;j<3;j++)ellipse(x+(j-1)*15,350+j*13,40,50,s.bg==="night"?"#34546a":"#5d9d7e")}ellipse(400,105,29,29,s.bg==="night"?"#fff2cb":"#ffdc86")}
 }
-function characterDraw(s,t){const C=character,walking=s.action==="walk",sitting=s.action==="sit",waving=s.action==="wave",moving=walking?Math.sin(t*7):0;let x=240+(walking?Math.sin(t*0.9)*60:0),y=sitting?390:385+(walking?Math.abs(moving)*5:Math.sin(t*2)*2);
-g.save();g.translate(x,y);g.scale(1.18,1.18);
-ellipse(0,89,45,9,"#46565b33");
-const cloth=C.outfitColor||s.shirt||"#9d73bb",skin=C.skinColor||"#edbd9c",hair=C.hairColor||"#79513c";
-if(sitting){g.fillStyle="#85695d";g.fillRect(-54,60,108,12);g.fillRect(-45,72,9,60);g.fillRect(35,72,9,60)}
-limb(-15,44,-25+(walking?moving*19:-25),sitting?73:126,15,"#353b5a");limb(15,44,25-(walking?moving*19:-25),sitting?73:126,15,"#353b5a");
-if(sitting){limb(-25,73,-30,120,13,"#353b5a");limb(25,73,30,120,13,"#353b5a")}
-ellipse(-25+(walking?moving*19:0),sitting?123:129,16,7,"#322e3c");ellipse(25-(walking?moving*19:0),sitting?123:129,16,7,"#322e3c");
-if(C.bodyType==="f")shape([[-19,-20],[19,-20],[26,27],[38,61],[-38,61],[-26,27]],cloth);else shape([[-25,-20],[25,-20],[23,53],[-23,53]],cloth);
-limb(-22,-10,-43,37+(walking?moving*13:0),13,skin);limb(22,-10,44+(waving?Math.sin(t*8)*14:0),waving?-65:37-(walking?moving*13:0),13,skin);
-ellipse(-43,37+(walking?moving*13:0),7,8,skin);ellipse(44+(waving?Math.sin(t*8)*14:0),waving?-65:37-(walking?moving*13:0),7,8,skin);
-ellipse(0,-30,10,18,skin);
-if(["long","bob","bun"].includes(C.hairStyle)){ellipse(0,-96,42,C.hairStyle==="long"?72:50,hair);if(C.hairStyle==="bun")ellipse(30,-139,22,22,hair)}
-ellipse(0,-90,36,45,skin);
-ellipse(0,-124,37,22,hair);
-if(C.hairStyle==="short"){ellipse(-26,-121,16,20,hair);ellipse(23,-123,17,20,hair)}
-if(C.hairStyle==="long"){ellipse(-35,-89,12,52,hair);ellipse(35,-89,12,52,hair)}
-ellipse(-13,-93,7,5,"#fff");ellipse(13,-93,7,5,"#fff");ellipse(-12,-93,4,4,C.eyeColor);ellipse(14,-93,4,4,C.eyeColor);ellipse(-11,-94,1.5,1.5,"#161b25");ellipse(15,-94,1.5,1.5,"#161b25");ellipse(0,-80,3,5,"#ce9c82");
-g.beginPath();g.strokeStyle="#8c4b55";g.lineWidth=2.8;if(C.emotion==="surprised"){ellipse(0,-69,6,8,"#874c50")}else if(C.emotion==="sad"){g.arc(0,-60,12,Math.PI*1.12,Math.PI*1.88,true);g.stroke()}else if(C.emotion==="calm"){limb(-9,-67,9,-67,2,"#8c4b55")}else{g.arc(0,-72,12,0.1,Math.PI-0.1);g.stroke()}
-if(s.action==="talk"&&Math.sin(t*10)>0.2)ellipse(0,-66,5,7,"#8c4b55");
-g.restore()}
+function segment(x1,y1,x2,y2,w,color){g.strokeStyle=color;g.lineWidth=w;g.lineCap="round";g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();ellipse(x2,y2,w/2,w/2,color)}
+function characterDraw(scene,t){
+const C=character,skin=C.skinColor,hair=C.hairColor,cloth=C.outfitColor,walking=scene.action==="walk",waving=scene.action==="wave",sitting=scene.action==="sit";
+const phase=Math.sin(t*6),bounce=walking?Math.abs(phase)*3:Math.sin(t*2)*1.3;
+const x=240+(walking?Math.sin(t*.9)*58:0),y=375+bounce+(sitting?35:0);
+g.save();g.translate(x,y);g.scale(1.15,1.15);
+ellipse(0,142,48,8,"#26334130");
+if(sitting){g.fillStyle="#886d60";g.fillRect(-54,53,108,11);g.fillRect(-46,64,9,83);g.fillRect(37,64,9,83)}
+// Legs are articulated at hip, knee and ankle.
+for(let side of [-1,1]){
+let hip=side*13,step=walking?phase*side:0;
+let kneeX=sitting?side*40:side*15+step*16,kneeY=sitting?74:91-Math.max(0,step)*8;
+let footX=sitting?side*44:side*16+step*27,footY=sitting?132:140-Math.max(0,step)*7;
+segment(hip,47,kneeX,kneeY,17,"#34405c");segment(kneeX,kneeY,footX,footY,14,"#34405c");
+ellipse(footX+side*4,footY+2,17,7,"#2b2d3a")
+}
+// Back hair and long side strands.
+if(C.hairStyle!=="short"){ellipse(0,-101,39,C.hairStyle==="long"?77:54,hair)}
+// Neck, torso and outfit.
+segment(0,-30,0,-12,14,skin);
+if(C.bodyType==="f"){
+shape([[-21,-20],[21,-20],[24,16],[37,56],[-37,56],[-24,16]],cloth);
+g.strokeStyle="#ffffff55";g.lineWidth=2;g.beginPath();g.moveTo(-16,-16);g.quadraticCurveTo(0,-4,16,-16);g.stroke();
+}else{shape([[-27,-20],[27,-20],[23,53],[-23,53]],cloth)}
+// Two-joint arms, including wave gesture.
+for(let side of [-1,1]){
+const shoulderX=side*24,shoulderY=-11;
+const isWave=waving&&side===1;
+const elbowX=isWave?side*(47+Math.sin(t*8)*3):side*(43+(walking?phase*side*8:0));
+const elbowY=isWave?-38:21+(walking?phase*side*9:0);
+const handX=isWave?side*(52+Math.sin(t*8)*12):side*44;
+const handY=isWave?-83:49+(walking?phase*side*11:0);
+segment(shoulderX,shoulderY,elbowX,elbowY,14,skin);segment(elbowX,elbowY,handX,handY,11,skin);
+ellipse(handX,handY,7,8,skin)
+}
+// Head with jaw and ears.
+ellipse(-35,-92,7,12,skin);ellipse(35,-92,7,12,skin);
+ellipse(0,-96,35,44,skin);
+ellipse(-22,-77,10,5,"#f28e8e42");ellipse(22,-77,10,5,"#f28e8e42");
+// Hair crown, swept fringe and optional bun.
+ellipse(0,-130,36,19,hair);
+g.fillStyle=hair;g.beginPath();g.moveTo(-34,-130);g.quadraticCurveTo(-8,-155,30,-133);g.quadraticCurveTo(12,-119,-9,-121);g.quadraticCurveTo(-23,-112,-34,-116);g.closePath();g.fill();
+if(C.hairStyle==="long"){ellipse(-34,-87,10,50,hair);ellipse(34,-87,10,50,hair)}
+if(C.hairStyle==="bob"){ellipse(-34,-91,9,28,hair);ellipse(34,-91,9,28,hair)}
+if(C.hairStyle==="bun")ellipse(30,-147,19,19,hair);
+if(C.hairStyle==="short"){ellipse(-28,-125,13,16,hair);ellipse(24,-129,13,16,hair)}
+// Eyebrows, eyes and eyelids.
+g.strokeStyle="#533a35";g.lineWidth=2.6;g.lineCap="round";
+for(let side of [-1,1]){g.beginPath();g.moveTo(side*6,-109);g.quadraticCurveTo(side*15,-114,side*23,-108);g.stroke();
+ellipse(side*14,-98,8,6,"#fff9f2");ellipse(side*14,-98,4.5,5,C.eyeColor);ellipse(side*14,-98,2.5,3,"#1e2738");ellipse(side*12.5,-100,1.4,1.4,"#fff")}
+g.strokeStyle="#bd8875";g.lineWidth=1.7;g.beginPath();g.moveTo(-1,-94);g.quadraticCurveTo(-5,-83,1,-82);g.stroke();
+g.strokeStyle="#974f58";g.lineWidth=2.6;g.beginPath();
+if(C.emotion==="surprised"||(scene.action==="talk"&&Math.sin(t*9)>.1)){ellipse(0,-70,5,7,"#974f58");ellipse(0,-70,2,3,"#4b2938")}
+else if(C.emotion==="sad"){g.arc(0,-59,11,Math.PI*1.15,Math.PI*1.85,true);g.stroke()}
+else if(C.emotion==="calm"){g.moveTo(-9,-69);g.lineTo(9,-69);g.stroke()}
+else{g.arc(0,-76,12,.15,Math.PI-.15);g.stroke()}
+g.restore()
+}
 function draw(t){let s=scenes[current];if(!s)return;backdrop(s);characterDraw(s,t);g.fillStyle="#ffffffed";g.beginPath();g.roundRect(16,16,448,102,12);g.fill();g.fillStyle="#252b42";g.font="17px system-ui";let words=s.text.split(" "),lines=[""];for(let word of words){let i=lines.length-1;if(g.measureText(lines[i]+" "+word).width>417)lines.push(word);else lines[i]+=(lines[i]?" ":"")+word}lines.slice(0,4).forEach((v,i)=>g.fillText(v,28,43+i*21));g.fillStyle="#fff";g.font="14px system-ui";g.fillText((current+1)+"/"+scenes.length,20,618)}
 function tick(now){if(!playing)return;let elapsed=(now-started)/1000,s=scenes[current];if(elapsed>=s.seconds){current++;if(current>=scenes.length){playing=false;current=0;refresh();draw(0);$("status").textContent="Просмотр завершён";return}started=now;refresh();elapsed=0}draw(elapsed);frame=requestAnimationFrame(tick)}
 $("autoBtn").onclick=()=>modeSet("auto");$("manualBtn").onclick=()=>modeSet("manual");$("build").onclick=build;$("apply").onclick=apply;$("scene").onchange=()=>{current=Number($("scene").value);refresh();draw(0)};$("play").onclick=()=>{if(playing)return;playing=true;current=0;refresh();started=performance.now();frame=requestAnimationFrame(tick);$("status").textContent="Идёт просмотр"};$("stop").onclick=()=>{playing=false;cancelAnimationFrame(frame);$("status").textContent="Остановлено"};$("save").onclick=()=>{localStorage.setItem("animation-studio-v1",JSON.stringify({scenes,script:$("script").value,character}));$("status").textContent="Проект сохранён на этом устройстве"};try{let old=JSON.parse(localStorage.getItem("animation-studio-v1"));if(old&&old.scenes?.length){scenes=old.scenes;if(old.character)character={...character,...old.character};$("script").value=old.script||"";refresh();draw(0)}else build()}catch(e){build()}
