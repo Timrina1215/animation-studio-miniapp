@@ -4,6 +4,8 @@ const base="https://huggingface.co/Gigsu/vocoloco-onnx/resolve/main";
 const tests=[
 ["Манифест OmniVoice",base+"/engine/omnivoice-f16.json","json"],
 ["Манифест декодера",base+"/engine/decoder-f32.json","json"],
+["Манифест OmniVoice (альтернативный домен)","https://hf-mirror.com/Gigsu/vocoloco-onnx/resolve/main/engine/omnivoice-f16.json","json"],
+["Манифест декодера (альтернативный домен)","https://hf-mirror.com/Gigsu/vocoloco-onnx/resolve/main/engine/decoder-f32.json","json"],
 ["Модуль движка (CDN)","https://cdn.jsdelivr.net/npm/@vocoloco/engine@0.1.0/omnivoice-engine.js","module"]
 ];
 for(const [name,url,type] of tests){
