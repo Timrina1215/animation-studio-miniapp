@@ -632,15 +632,15 @@ async function init({ modelBaseUrl, forceCPU = false, confirmDownload = false, l
     }
 
     postMessage({ type: 'progress', stage: 'loading', phase: 'config', detail: 'Loading config...' });
-    config = await withTimeout(fetch(`${modelBaseUrl}/omnivoice-config.json`).then((r) => r.json()), 60e3, 'Loading the model config');
+    config = await withTimeout(fetch(`${modelBaseUrl}/omnivoice-config.json`).then((r) => { if (!r.ok) throw new Error(`Config HTTP ${r.status}`); return r.json(); }).catch((err) => { throw new Error(`Config fetch (${modelBaseUrl}/omnivoice-config.json): ${err.message}`); }), 60e3, 'Loading the model config');
 
     postMessage({ type: 'progress', stage: 'loading', phase: 'tokenizer', detail: 'Loading tokenizer...' });
-    tokenizer = await withTimeout(loadTokenizer(`${modelBaseUrl}/tokenizer.json`), 120e3, 'Loading the tokenizer');
+    tokenizer = await withTimeout(loadTokenizer(`${modelBaseUrl}/tokenizer.json`).catch((err) => { throw new Error(`Tokenizer fetch (${modelBaseUrl}/tokenizer.json): ${err.message}`); }), 120e3, 'Loading the tokenizer');
 
     const url = (f) => `${modelBaseUrl}/${f}`;
     const manifest = async (f) => {
       const r = await fetch(`${url(f)}.json`, { cache: 'no-store' });
-      if (!r.ok) throw new Error(`${f}.json: ${r.status}`);
+      if (!r.ok) throw new Error(`Manifest ${url(f)}.json: HTTP ${r.status}`);
       return r.json();
     };
     const manifests = adapter && await Promise.all([manifest(ENGINE_FILES.main), manifest(ENGINE_FILES.decoder)])
